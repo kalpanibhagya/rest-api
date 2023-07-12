@@ -18,7 +18,7 @@
    :headers {"Content-Type" "text/html"}
    :body    "Hello World"})
 
-(defn hello-name [req] ;(3)
+(defn greeting-handler [req] ;(3)
   {:status  200
    :headers {"Content-Type" "text/html"}
    :body    (->
@@ -55,7 +55,7 @@
 
 (defroutes app-routes
   (GET "/" [] simple-body-page)
-  (GET "/hello" [] hello-name)
+  (GET "/greet" [] greeting-handler)
   (GET "/users" [] user-handler)
   (POST "/users/add" [] adduser-handler)
   (route/not-found "Page not found!"))
