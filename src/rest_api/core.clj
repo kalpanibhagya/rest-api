@@ -26,14 +26,20 @@
              (str "Hello " (:name (:params req))))})
 
 (def users-collection (atom []))
+(def id-counter (atom 0))
 
-;add a new user
-(defn adduser [firstname surname]
-  (swap! users-collection conj {:firstname (str/capitalize firstname) :surname (str/capitalize surname)}))
+(defn adduser [firstname surname city]
+  (swap! id-counter inc)
+  (let [user {:id @id-counter
+              :firstname (str/capitalize firstname)
+              :surname (str/capitalize surname)
+              :city city}]
+    (swap! users-collection conj user)
+    user))
 
 ; Example JSON objects
-(adduser "Kalpani" "Ranasinghe")
-(adduser "John" "Doe")
+(adduser "Kalpani" "Ranasinghe", "Oulu")
+(adduser "John" "Doe", "Helsinki")
 
 ; Return List of People
 (defn user-handler [req]
@@ -50,14 +56,38 @@
         {:status  200
          :headers {"Content-Type" "text/json"}
          :body    (-> (let [p (partial getparameter req)]
-                        (str (json/write-str (adduser (p :firstname) (p :surname))))))})
+                        (str (json/write-str (adduser (p :firstname) (p :surname) (p :city))))))})
 
+
+(defn update-city [id new-city]
+  (swap! users-collection
+         (fn [users]
+           (mapv (fn [user]
+                   (if (= (:id user) id)
+                     (assoc user :city new-city)
+                     user))
+                 users)))
+  {:status 200
+   :headers {"Content-Type" "text/json"}
+   :body (json/write-str @users-collection)})
+
+(defn delete-user [id]
+  (swap! users-collection
+         (fn [users]
+           (->> users
+                (filter #(not= (:id %) id))
+                vec)))
+  {:status 200
+   :headers {"Content-Type" "text/json"}
+   :body (json/write-str @users-collection)})
 
 (defroutes app-routes
   (GET "/" [] simple-body-page)
   (GET "/greet" [] greeting-handler)
   (GET "/users" [] user-handler)
   (POST "/users/add" [] adduser-handler)
+  (POST "/user/update" [id city] (update-city (Integer/parseInt id) city))
+  (POST "/user/delete" [id] (delete-user (Integer/parseInt id)))
   (route/not-found "Page not found!"))
 
 (defn -main
