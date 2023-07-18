@@ -9,14 +9,18 @@
             [compojure.core :refer [defroutes GET]]
             [compojure.core :refer [defroutes POST]]
             [ring.middleware.defaults :refer [wrap-defaults]]
-            [ring.middleware.defaults :refer [site-defaults]])
+            [ring.middleware.defaults :refer [site-defaults]]
+            [clojure.java.io :as io])
     (:gen-class))
+
+(defn read-file [file-path]
+  (slurp (io/resource file-path)))
 
 ; Simple Page
 (defn simple-body-page [req]
   {:status  200
    :headers {"Content-Type" "text/html"}
-   :body    "Hello World"})
+   :body    (read-file "index.html")})
 
 (defn greeting-handler [req] ;(3)
   {:status  200
