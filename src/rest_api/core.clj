@@ -1,15 +1,11 @@
 (ns rest-api.core
   (:require [org.httpkit.server :as server]
-            [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer :all]
             [clojure.pprint :as pp]
             [clojure.string :as str]
             [clojure.data.json :as json]
-            [compojure.core :refer [defroutes GET]]
-            [compojure.core :refer [defroutes POST]]
-            [ring.middleware.defaults :refer [wrap-defaults]]
-            [ring.middleware.defaults :refer [site-defaults]]
+            [compojure.core :refer [defroutes GET POST]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [clojure.java.io :as io])
     (:gen-class))
 
