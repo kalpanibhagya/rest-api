@@ -12,19 +12,6 @@
 (defn read-file [file-path]
   (slurp (io/resource file-path)))
 
-; Simple Page
-(defn simple-body-page [req]
-  {:status  200
-   :headers {"Content-Type" "text/html"}
-   :body    (read-file "index.html")})
-
-(defn greeting-handler [req] ;(3)
-  {:status  200
-   :headers {"Content-Type" "text/html"}
-   :body    (->
-             (pp/pprint req)
-             (str "Hello " (:name (:params req))))})
-
 (def users-collection (atom []))
 (def id-counter (atom 0))
 
@@ -82,8 +69,6 @@
    :body (json/write-str @users-collection)})
 
 (defroutes app-routes
-  (GET "/" [] simple-body-page)
-  (GET "/greet" [] greeting-handler)
   (GET "/users" [] user-handler)
   (POST "/users/add" [] adduser-handler)
   (POST "/user/update" [id city] (update-city (Integer/parseInt id) city))
