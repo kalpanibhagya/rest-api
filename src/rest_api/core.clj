@@ -1,16 +1,11 @@
 (ns rest-api.core
   (:require [org.httpkit.server :as server]
             [compojure.route :as route]
-            [clojure.pprint :as pp]
             [clojure.string :as str]
             [clojure.data.json :as json]
-            [compojure.core :refer [defroutes GET POST]]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
-            [clojure.java.io :as io])
+            [compojure.core :refer [defroutes GET POST PUT DELETE]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]])
     (:gen-class))
-
-(defn read-file [file-path]
-  (slurp (io/resource file-path)))
 
 (def users-collection (atom []))
 (def id-counter (atom 0))
@@ -25,10 +20,10 @@
     user))
 
 ; Example JSON objects
-(adduser "Kalpani" "Ranasinghe", "Oulu")
+(adduser "Jane" "Smith", "Oulu")
 (adduser "John" "Doe", "Helsinki")
 
-; Return List of People
+; Return List of Users
 (defn user-handler [req]
         {:status  200
          :headers {"Content-Type" "text/json"}
@@ -43,36 +38,40 @@
         {:status  200
          :headers {"Content-Type" "text/json"}
          :body    (-> (let [p (partial getparameter req)]
-                        (str (json/write-str (adduser (p :firstname) (p :surname) (p :city))))))})
+                        (adduser (p :firstname) (p :surname) (p :city))
+                        (str (json/write-str @users-collection))))})
 
 
-(defn update-city [id new-city]
-  (swap! users-collection
-         (fn [users]
-           (mapv (fn [user]
-                   (if (= (:id user) id)
-                     (assoc user :city new-city)
-                     user))
-                 users)))
-  {:status 200
-   :headers {"Content-Type" "text/json"}
-   :body (json/write-str @users-collection)})
+(defn update-city [req]
+  (let [id (-> req :params :id)
+        city (-> req :params :city)]
+    (swap! users-collection
+           (fn [users]
+             (mapv (fn [user]
+                     (if (= (:id user) (Integer. id))
+                       (assoc user :city city)
+                       user))
+                   users)))
+    {:status 200
+     :headers {"Content-Type" "text/json"}
+     :body (json/write-str @users-collection)}))
 
-(defn delete-user [id]
-  (swap! users-collection
-         (fn [users]
-           (->> users
-                (filter #(not= (:id %) id))
-                vec)))
-  {:status 200
-   :headers {"Content-Type" "text/json"}
-   :body (json/write-str @users-collection)})
+(defn delete-user [req]
+  (let [id (-> req :params :id)]
+    (swap! users-collection
+           (fn [users]
+             (->> users
+                  (filter #(not= (:id %) (Integer. id)))
+                  vec)))
+    {:status 200
+     :headers {"Content-Type" "text/json"}
+     :body (json/write-str @users-collection)}))
 
 (defroutes app-routes
   (GET "/users" [] user-handler)
   (POST "/users/add" [] adduser-handler)
-  (POST "/user/update" [id city] (update-city (Integer/parseInt id) city))
-  (POST "/user/delete" [id] (delete-user (Integer/parseInt id)))
+  (PUT "/user/update" [] update-city)
+  (DELETE "/user/delete" [] delete-user)
   (route/not-found "Page not found!"))
 
 (defn -main
