@@ -29,19 +29,17 @@
          :headers {"Content-Type" "text/json"}
          :body    (str (json/write-str @users-collection))})
 
-
-; Helper to get the parameter specified by pname from :params object in req
-(defn getparameter [req pname] (get (:params req) pname))
-
 ; Add a new person into the users-collection
 (defn adduser-handler [req]
         {:status  200
          :headers {"Content-Type" "text/json"}
-         :body    (-> (let [p (partial getparameter req)]
-                        (adduser (p :firstname) (p :surname) (p :city))
+         :body    (-> (let [firstname (-> req :params :firstname)
+                            surname (-> req :params :surname)
+                            city (-> req :params :city)]
+                        (adduser firstname surname city)
                         (str (json/write-str @users-collection))))})
 
-
+; Updates the city of the given user id
 (defn update-city [req]
   (let [id (-> req :params :id)
         city (-> req :params :city)]
@@ -56,6 +54,7 @@
      :headers {"Content-Type" "text/json"}
      :body (json/write-str @users-collection)}))
 
+; Deleted the user of the given id
 (defn delete-user [req]
   (let [id (-> req :params :id)]
     (swap! users-collection
