@@ -76,11 +76,10 @@
 (defn -main
   [& args]
   (let [port (Integer/parseInt (or (System/getenv "PORT") "4000"))]
-      ; Run the server with Ring.defaults middleware
     (server/run-server
      (-> app-routes
          (wrap-defaults (assoc-in site-defaults [:security :anti-forgery] false)))
      {:port port})
-    (println (str "Running webserver at http:/127.0.0.1:" port "/"))))
+    (println (str "Webserver started at http:/127.0.0.1:" port "/"))))
 
 
